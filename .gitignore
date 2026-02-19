@@ -1,0 +1,13 @@
+.env
+output/
+__pycache__/
+*.pyc
+.DS_Store
+venv/
+.venv/
+*.egg-info/
+dist/
+build/
+.streamlit/
+sessions/*
+!sessions/.gitkeep
