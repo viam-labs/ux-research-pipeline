@@ -104,8 +104,6 @@ if st.session_state.step == "upload":
         )
         facilitator = st.text_input("Facilitator", value="Ana")
         session_date = st.date_input("Session date", value=date.today())
-        notes_link = st.text_input("Notes link", placeholder="https://docs.google.com/...")
-        video_link = st.text_input("Video link", placeholder="https://drive.google.com/...")
 
     st.divider()
 
@@ -122,8 +120,6 @@ if st.session_state.step == "upload":
             "task": task,
             "facilitator": facilitator,
             "date": session_date.isoformat(),
-            "notes_link": notes_link,
-            "video_link": video_link,
         }
 
         with st.spinner("Calling Claude to extract bugs and feature requests... (30-60s)"):
@@ -371,9 +367,90 @@ elif st.session_state.step == "review":
         )
 
     with col_email:
-        if st.button("📧 Generate Stakeholder Email", use_container_width=True):
+        # Export session summary as markdown
+        summary_md = f"""# UX Session Summary
+
+"""
+        summary_md += f"""**Participant:** {session.get('participant', '?')}
+"""
+        summary_md += f"""**OS:** {session.get('os', '?')}
+"""
+        summary_md += f"""**Task:** {session.get('task', '?')}
+"""
+        summary_md += f"""**Date:** {session.get('date', '?')}
+
+"""
+        summary_md += f"""## Key Takeaways
+
+"""
+        for t in summary.get('takeaways', []):
+            summary_md += f"""- {t}
+"""
+        summary_md += f"""
+## What Worked
+
+"""
+        for w in summary.get('what_worked', []):
+            summary_md += f"""- {w}
+"""
+        summary_md += f"""
+## What Didn't
+
+"""
+        for w in summary.get('what_didnt', []):
+            summary_md += f"""- {w}
+"""
+        if summary.get('facilitator_interventions'):
+            summary_md += f"""
+## Facilitator Interventions
+
+"""
+            for fi in summary['facilitator_interventions']:
+                summary_md += f"""- {fi}
+"""
+        summary_md += f"""
+## Approved Bugs ({len(approved_bugs)})
+
+"""
+        for b in approved_bugs:
+            summary_md += f"""### [{b['severity'].upper()}] {b['title']}
+"""
+            summary_md += f"""- **Steps:** {'; '.join(b.get('steps_to_reproduce', []))}
+"""
+            summary_md += f"""- **Expected:** {b['expected_behavior']}
+"""
+            summary_md += f"""- **Actual:** {b['actual_behavior']}
+"""
+            summary_md += f"""- **Evidence:** {b['evidence']}
+
+"""
+        if approved_frs:
+            summary_md += f"""
+## Feature Requests ({len(approved_frs)})
+
+"""
+            for fr_item in approved_frs:
+                summary_md += f"""### {fr_item['title']}
+"""
+                summary_md += f"""- **User said:** {fr_item['user_said']}
+"""
+                summary_md += f"""- **Underlying need:** {fr_item['underlying_need']}
+
+"""
+        st.download_button("📝 Download Summary", data=summary_md, file_name=f"summary_{session.get('date', 'unknown')}_{session.get('participant', 'unknown').split()[0].lower()}.md", mime="text/markdown", use_container_width=True)
+
+    # ── Email Generation ──
+    st.divider()
+    st.subheader("📧 Stakeholder Email")
+    col_links1, col_links2 = st.columns(2)
+    with col_links1:
+        notes_link = st.text_input("Notes link", placeholder="https://docs.google.com/...")
+    with col_links2:
+        video_link = st.text_input("Video link", placeholder="https://drive.google.com/...")
+
+    if st.button("📧 Generate Stakeholder Email", use_container_width=True):
             email_input = {
-                "session": session,
+                "session": {**session, "notes_link": notes_link, "video_link": video_link},
                 "summary": summary,
                 "approved_bugs": approved_bugs,
                 "approved_frs": approved_frs,
