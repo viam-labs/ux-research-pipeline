@@ -16,7 +16,7 @@ from pathlib import Path
 import sys
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
-from extractor import extract
+from extractor import extract, generate_email
 from jira_client import JiraClient
 
 def read_uploaded_file(uploaded_file) -> str:
@@ -37,6 +37,8 @@ st.set_page_config(
     layout="wide",
 )
 
+st.markdown("""<style>.stTextInput div[data-testid="InputInstructions"] { display: none; }</style>""", unsafe_allow_html=True)
+
 # ─── State init ───
 if "extracted" not in st.session_state:
     st.session_state.extracted = None
@@ -44,6 +46,8 @@ if "approvals" not in st.session_state:
     st.session_state.approvals = {}
 if "jira_results" not in st.session_state:
     st.session_state.jira_results = []
+if "email_draft" not in st.session_state:
+    st.session_state.email_draft = None
 if "step" not in st.session_state:
     st.session_state.step = "upload"  # upload → review → submitted
 
@@ -52,6 +56,7 @@ def reset():
     st.session_state.extracted = None
     st.session_state.approvals = {}
     st.session_state.jira_results = []
+    st.session_state.email_draft = None
     st.session_state.step = "upload"
 
 
@@ -99,6 +104,8 @@ if st.session_state.step == "upload":
         )
         facilitator = st.text_input("Facilitator", value="Ana")
         session_date = st.date_input("Session date", value=date.today())
+        notes_link = st.text_input("Notes link", placeholder="https://docs.google.com/...")
+        video_link = st.text_input("Video link", placeholder="https://drive.google.com/...")
 
     st.divider()
 
@@ -115,6 +122,8 @@ if st.session_state.step == "upload":
             "task": task,
             "facilitator": facilitator,
             "date": session_date.isoformat(),
+            "notes_link": notes_link,
+            "video_link": video_link,
         }
 
         with st.spinner("Calling Claude to extract bugs and feature requests... (30-60s)"):
@@ -300,7 +309,7 @@ elif st.session_state.step == "review":
     approved_frs = [f for f in frs if st.session_state.approvals.get(f["id"]) == "approved"]
     total_approved = len(approved_bugs) + len(approved_frs)
 
-    col_submit, col_download = st.columns(2)
+    col_submit, col_download, col_email = st.columns(3)
 
     with col_submit:
         # Check Jira config
@@ -360,6 +369,24 @@ elif st.session_state.step == "review":
             mime="application/json",
             use_container_width=True,
         )
+
+    with col_email:
+        if st.button("📧 Generate Stakeholder Email", use_container_width=True):
+            email_input = {
+                "session": session,
+                "summary": summary,
+                "approved_bugs": approved_bugs,
+                "approved_frs": approved_frs,
+            }
+            with st.spinner("Generating email draft..."):
+                st.session_state.email_draft = generate_email([email_input])
+            st.rerun()
+
+    if st.session_state.email_draft:
+        st.divider()
+        st.subheader("📧 Stakeholder Email Draft")
+        edited_email = st.text_area("Edit before sending:", value=st.session_state.email_draft, height=400)
+        st.download_button("📋 Download as .txt", data=edited_email, file_name=f"email_{session.get('date', 'unknown')}.txt", mime="text/plain", use_container_width=True)
 
 
 # ═══════════════════════════════════════════════════════════

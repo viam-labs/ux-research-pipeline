@@ -8,6 +8,7 @@ from anthropic import Anthropic
 
 PROMPT_PATH = Path(__file__).parent.parent / "prompts" / "extract_bugs.md"
 KNOWN_ISSUES_PATH = Path(__file__).parent.parent / "prompts" / "known_issues.md"
+EMAIL_PROMPT_PATH = Path(__file__).parent.parent / "prompts" / "generate_email.md"
 
 
 def load_prompt(session_meta: dict) -> str:
@@ -65,3 +66,20 @@ def extract(transcript: str, notes: str, session_meta: dict) -> dict:
         return json.loads(raw)
     except json.JSONDecodeError as e:
         return {"_raw": raw, "_error": str(e)}
+
+
+def generate_email(sessions_data: list) -> str:
+    """Generate a stakeholder email from one or more session extractions."""
+    client = Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
+    system_prompt = EMAIL_PROMPT_PATH.read_text()
+    user_message = f"""Here are the session results to summarize into an email:
+
+{json.dumps(sessions_data, indent=2)}"""
+
+    response = client.messages.create(
+        model="claude-sonnet-4-20250514",
+        max_tokens=4000,
+        system=system_prompt,
+        messages=[{"role": "user", "content": user_message}],
+    )
+    return response.content[0].text
