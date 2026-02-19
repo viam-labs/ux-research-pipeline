@@ -16,7 +16,7 @@ from pathlib import Path
 import sys
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
-from extractor import extract, generate_email
+from extractor import extract, generate_email, generate_email
 from jira_client import JiraClient
 
 def read_uploaded_file(uploaded_file) -> str:
@@ -46,6 +46,12 @@ if "approvals" not in st.session_state:
     st.session_state.approvals = {}
 if "jira_results" not in st.session_state:
     st.session_state.jira_results = []
+    st.session_state.email_draft = None
+    st.session_state.selected_ticket = None
+if "email_draft" not in st.session_state:
+    st.session_state.email_draft = None
+if "selected_ticket" not in st.session_state:
+    st.session_state.selected_ticket = None
 if "email_draft" not in st.session_state:
     st.session_state.email_draft = None
 if "step" not in st.session_state:
@@ -56,6 +62,12 @@ def reset():
     st.session_state.extracted = None
     st.session_state.approvals = {}
     st.session_state.jira_results = []
+    st.session_state.email_draft = None
+    st.session_state.selected_ticket = None
+if "email_draft" not in st.session_state:
+    st.session_state.email_draft = None
+if "selected_ticket" not in st.session_state:
+    st.session_state.selected_ticket = None
     st.session_state.email_draft = None
     st.session_state.step = "upload"
 

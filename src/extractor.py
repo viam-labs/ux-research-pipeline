@@ -83,3 +83,43 @@ def generate_email(sessions_data: list) -> str:
         messages=[{"role": "user", "content": user_message}],
     )
     return response.content[0].text
+
+
+EMAIL_PROMPT_PATH = Path(__file__).parent.parent / "prompts" / "generate_email.md"
+
+
+def generate_email(sessions_data: list) -> str:
+    """Generate a stakeholder email from one or more session extractions."""
+    client = Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
+    system_prompt = EMAIL_PROMPT_PATH.read_text()
+    user_message = f"""Here are the session results to summarize into an email:
+
+{json.dumps(sessions_data, indent=2)}"""
+
+    response = client.messages.create(
+        model="claude-sonnet-4-20250514",
+        max_tokens=4000,
+        system=system_prompt,
+        messages=[{"role": "user", "content": user_message}],
+    )
+    return response.content[0].text
+
+
+EMAIL_PROMPT_PATH = Path(__file__).parent.parent / "prompts" / "generate_email.md"
+
+
+def generate_email(sessions_data: list) -> str:
+    """Generate a stakeholder email from one or more session extractions."""
+    client = Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
+    system_prompt = EMAIL_PROMPT_PATH.read_text()
+    user_message = f"""Here are the session results to summarize into an email:
+
+{json.dumps(sessions_data, indent=2)}"""
+
+    response = client.messages.create(
+        model="claude-sonnet-4-20250514",
+        max_tokens=4000,
+        system=system_prompt,
+        messages=[{"role": "user", "content": user_message}],
+    )
+    return response.content[0].text

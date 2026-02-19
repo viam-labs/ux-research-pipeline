@@ -6,7 +6,7 @@ You will receive structured data from one or more UX sessions (bugs, feature req
 - Opening: 1-2 sentences on what was tested and why
 - TL;DR: One sentence, high-level takeaway
 - Per session: A header line ("Session N: [OS] user, [task]") followed by a one-line outcome summary, then 2-4 numbered findings. Each finding has a bold first sentence (the insight) followed by 1-2 sentences of supporting detail.
-- After each session block, include the Notes and Video links provided in the session data, formatted as: [Notes](url) | [Video](url)
+- After each session block, include the Notes and Video links provided in the session data, formatted as: [Notes](url) | [Video](url). If links are empty, write "Notes | Video" as placeholders.
 - Close with "Let me know if you have any questions or want to join coming sessions!"
 
 **Writing style:**
