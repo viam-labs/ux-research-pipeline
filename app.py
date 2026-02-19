@@ -19,6 +19,17 @@ sys.path.insert(0, str(Path(__file__).parent / "src"))
 from extractor import extract
 from jira_client import JiraClient
 
+def read_uploaded_file(uploaded_file) -> str:
+    if uploaded_file.name.endswith('.docx'):
+        from docx import Document
+        from io import BytesIO
+        doc = Document(BytesIO(uploaded_file.read()))
+        return chr(10).join(p.text for p in doc.paragraphs)
+    else:
+        return uploaded_file.read().decode('utf-8')
+
+
+
 # ─── Page config ───
 st.set_page_config(
     page_title="UX Research → Jira",
@@ -72,10 +83,10 @@ if st.session_state.step == "upload":
     with col_left:
         st.subheader("Session Files")
         transcript_file = st.file_uploader(
-            "Transcript (.vtt, .txt, .srt)", type=["vtt", "txt", "srt"]
+            "Transcript (.vtt, .txt, .srt)", type=["vtt", "txt", "srt", "docx"]
         )
         notes_file = st.file_uploader(
-            "Observer Notes (.md, .txt)", type=["md", "txt"]
+            "Observer Notes (.md, .txt)", type=["md", "txt", "docx"]
         )
 
     with col_right:
@@ -95,8 +106,8 @@ if st.session_state.step == "upload":
     ready = all([transcript_file, notes_file, participant, participant_os, task])
 
     if st.button("🚀 Extract Tickets", type="primary", disabled=not ready, use_container_width=True):
-        transcript_text = transcript_file.read().decode("utf-8")
-        notes_text = notes_file.read().decode("utf-8")
+        transcript_text = read_uploaded_file(transcript_file)
+        notes_text = read_uploaded_file(notes_file)
 
         session_meta = {
             "participant": participant,
