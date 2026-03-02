@@ -27,6 +27,15 @@ from extractor import extract
 from jira_client import JiraClient
 
 
+def read_file(filepath: str) -> str:
+    """Read a text or docx file and return its content as a string."""
+    if filepath.endswith('.docx'):
+        from docx import Document
+        doc = Document(filepath)
+        return "\n".join(p.text for p in doc.paragraphs)
+    return Path(filepath).read_text()
+
+
 def main():
     parser = argparse.ArgumentParser(description="UX Research → Jira (CLI)")
     parser.add_argument("--transcript", required=True)
@@ -39,8 +48,8 @@ def main():
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
 
-    transcript = Path(args.transcript).read_text()
-    notes = Path(args.notes).read_text()
+    transcript = read_file(args.transcript)
+    notes = read_file(args.notes)
     session_date = args.date or date.today().isoformat()
 
     session_meta = {
